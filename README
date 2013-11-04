@@ -1,0 +1,9 @@
+log_monitor is a small/simple tool for monitoring log files, written in Python. It is designed to be used together with other job scheduler (eg: cron).
+
+Main features:
+- Monitor a set of text patterns that are defined by regex
+- Block-wise text matching, a block can either be a single line or multiple lines
+- Monitor the size and idle time of target file
+- Send email notifications on detected events via SMTP
+- Play sound on detected events (available only in Windows)
+
