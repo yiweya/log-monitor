@@ -7,3 +7,5 @@ Main features:
 - Send email notifications on detected events via SMTP
 - Play sound on detected events (available only in Windows)
 
+Sample usage: python logmon.py sample.cfg
+
