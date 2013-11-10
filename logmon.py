@@ -114,16 +114,17 @@ def do_send_email(subject, body):
     finally:
         session.quit()
 
-def send_email(extract, **kw):
-    if extract:
-        assert all(k in kw for k in ['blocks', 'i', 'before', 'after'])
-        blocks, i, before, after = kw['blocks'], kw['i'], kw['before'], kw['after']
-        subject = blocks[i].split('\n', 1)[0][:30]
-        body = extract_body(blocks, i, before, after)
+def send_email(subj_pars, body_pars, **kw):
+    if subj_pars['extract']:
+        blocks, i = kw['blocks'], kw['i']
+        subject = re.search(subj_pars['pattern'], blocks[i].split('\n', 1)[0]).group()
     else:
-        assert 'text' in kw
-        text = kw['text']
-        subject, body = text, ''
+        subject = subj_pars['subject']
+    if body_pars['extract']:
+        blocks, i = kw['blocks'], kw['i']
+        body = extract_body(blocks, i, body_pars['before'], body_pars['after'])
+    else:
+        body = body_pars['body']
 
     try:
         do_send_email(subject, body)
@@ -152,15 +153,24 @@ def parse_action(r):
     try:
         assert isinstance(r, dict)
         if 'send_email' in r:
-            pars = r['send_email'] # ("extract", 5, 5) or ("text", "xxx")
-            if pars[0] == 'extract':
-                pmin, pmax = partial(min, 20), partial(max, 0) # internal cfg
-                before, after =  map(pmax, map(pmin, map(parse_int, pars[1:])))
-                return partial(send_email, True, before=before, after=after)
-            elif pars[0] == 'text':
-                return partial(send_email, False, text=pars[1])
+            pars = r['send_email']
+            subject, body = pars['subject'], pars.get('body', '')
+            if isinstance(subject, tuple): # eg: ("regex", "TWS.*")
+                subj_pars = {'extract': True, 'pattern': subject[1]}
             else:
-                assert False
+                assert isinstance(subject, str)
+                subj_pars = {'extract': False, 'subject': subject}
+            if isinstance(body, tuple): # eg: ("extract", 5, 5)
+                pmin, pmax = partial(min, 20), partial(max, 0) # internal cfg
+                before, after =  map(pmax, map(pmin, map(parse_int, body[1:])))
+                body_pars = {'extract': True, 'before': before, 'after': after}
+            else:
+                assert isinstance(body, str)
+                body_pars = {'extract': False, 'body': body}
+            if not 'regex' in r: # file rules
+                msg = 'Only match rules may extract subject or body from context'
+                assert not (subj_pars['extract'] or body_pars['extract']), msg
+            return partial(send_email, subj_pars=subj_pars, body_pars=body_pars)
         elif 'play_sound' in r:
             sound_file, repeat = r['play_sound']
             return partial(play_sound, sound_file, parse_int(repeat))
