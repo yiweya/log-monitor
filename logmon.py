@@ -224,11 +224,13 @@ def main():
     s[target_file] += blocks_len(blocks)
     save_state(s)
 
+def state_fname(target_file):
+    return reduce(lambda acc, x: acc.replace(x, '_'), [':', '\\', '/'], target_file) + '.state'
 
 if __name__ == '__main__':
     logging.basicConfig(filename='logmon.log', format='%(levelname)s:%(asctime)s:%(message)s') # internal cfg
-    state_fn = 'logmon.state' # internal cfg
     cfg = parse_moncfg(moncfg_fname())
     target_file = cfg['target_file']
+    state_fn = state_fname(target_file)
     main()
 
