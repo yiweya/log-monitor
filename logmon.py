@@ -53,8 +53,7 @@ def load_state():
         data = f.read()
     try:
         _state = ast.literal_eval(data)
-        if not target_file in _state:
-            _state[target_file] = 0
+        assert target_file in _state
         return _state
     except:
         logging.exception('load_state failed, data = "%s"', data)
