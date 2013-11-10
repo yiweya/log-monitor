@@ -32,9 +32,22 @@ def split_blocks(data, mark):
 def blocks_len(blocks):
     return sum(map(len, blocks))
 
+def adjust_by_state(blocks):
+    if has_state():
+        return blocks
+
+    lookback = cfg['init_scan_lookback']
+    if lookback <= 0:
+        return []
+    else:
+        return blocks[-lookback:]
+
+def has_state():
+    return os.path.exists(state_fn)
+
 def load_state():
     init = {target_file: 0}
-    if not os.path.exists(state_fn):
+    if not has_state():
         return init
     with open(state_fn) as f:
         data = f.read()
@@ -175,11 +188,12 @@ def parse_moncfg(fname):
     try:
         with open(fname) as f:
             lines = [l.strip() for l in f]
-        _cfg = {'block_mark': '', 'email_context_separator': '+++'}
+        _cfg = {'block_mark': '', 'email_context_separator': '+++', 'init_scan_lookback': 100}
 
         # parse variables
         nvp = {'block_mark': lambda v: v.split('"')[1], 
                'smtp_port': parse_int,
+               'init_scan_lookback': parse_int,
                'email_send_to': lambda v: map(str.strip, v.split(',')), }
         nvlines = filter(lambda l: re.match(r'^\w* *:', l), lines)
         for nv in nvlines:
@@ -220,6 +234,7 @@ def main():
     s = load_state()
     data = load_logs(target_file, s[target_file])
     blocks = split_blocks(data, cfg['block_mark'])[:-1] # drop the last block, which may be incomplete
+    blocks = adjust_by_state(blocks)
     for i, b in enumerate(blocks):
         check_match(b, blocks=blocks, i=i)
     s[target_file] += blocks_len(blocks)
