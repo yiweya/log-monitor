@@ -243,9 +243,9 @@ def main():
     s = load_state()
     data = load_logs(target_file, s[target_file])
     blocks = split_blocks(data, cfg['block_mark'])[:-1] # drop the last block, which may be incomplete
-    blocks = adjust_by_state(blocks)
-    for i, b in enumerate(blocks):
-        check_match(b, blocks=blocks, i=i)
+    adj_blocks = adjust_by_state(blocks)
+    for i, b in enumerate(adj_blocks):
+        check_match(b, blocks=adj_blocks, i=i)
     s[target_file] += blocks_len(blocks)
     save_state(s)
 
