@@ -111,7 +111,10 @@ def do_send_email(subject, body):
         session.login(sender, pwd)
         session.sendmail(sender, recipients, msg.as_string())
     finally:
-        session.quit()
+        try:
+            session.quit()
+        except:
+            logging.exception('Failed to terminate SMTP session') # log only, no raise
 
 def send_email(subj_pars, body_pars, **kw):
     if subj_pars['extract']:
