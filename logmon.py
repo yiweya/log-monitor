@@ -243,6 +243,12 @@ def moncfg_fname():
     assert len(sys.argv) > 1, 'Usage: python logmon.py <cfg_file>'
     return sys.argv[1]
 
+def log_fname():
+    if len(sys.argv) > 2:
+        return sys.argv[2]
+    else:
+        return 'logmon.log'
+
 def check_logfile():
     for r in cfg['file_rules']:
         too_idle = 'file_idle_minutes' in r and min_since_last_update(target_file) > r['file_idle_minutes']
@@ -265,7 +271,7 @@ def state_fname(target_file):
     return reduce(lambda acc, x: acc.replace(x, '_'), [':', '\\', '/'], target_file) + '.state'
 
 if __name__ == '__main__':
-    logging.basicConfig(filename='logmon.log', format='%(levelname)s:%(asctime)s:%(message)s') # internal cfg
+    logging.basicConfig(filename=log_fname(), format='%(levelname)s:%(asctime)s:%(message)s') # internal cfg
     cfg = parse_moncfg(moncfg_fname())
     target_file = cfg['target_file']
     state_fn = state_fname(target_file)
