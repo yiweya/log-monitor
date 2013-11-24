@@ -89,7 +89,7 @@ def extract_body(blocks, i, before, after):
     end = i + after + 1
     ctx_before = ''.join(blocks[start:i])
     ctx_after = ''.join(blocks[i+1:end])
-    sep = cfg['email_context_separator'] + '\n'
+    sep = cfg['email_context_separator']
     return sep.join([ctx_before, blocks[i], ctx_after])
 
 def do_send_email(subject, body):
@@ -197,12 +197,13 @@ def parse_moncfg(fname):
     try:
         with open(fname) as f:
             lines = [l.strip() for l in f]
-        _cfg = {'block_mark': '', 'email_context_separator': '+++', 'init_scan_lookback': 100}
+        _cfg = {'block_mark': '', 'email_context_separator': '', 'init_scan_lookback': 100}
 
         # parse variables
         nvp = {'block_mark': lambda v: v.split('"')[1], 
                'smtp_port': parse_int,
                'init_scan_lookback': parse_int,
+               'email_context_separator': lambda v: v + '\n' if v else v,
                'email_send_to': lambda v: map(str.strip, v.split(',')), }
         nvlines = filter(lambda l: re.match(r'^\w* *:', l), lines)
         for nv in nvlines:
