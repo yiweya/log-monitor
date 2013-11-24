@@ -128,10 +128,18 @@ def send_email(subj_pars, body_pars, **kw):
     else:
         body = body_pars['body']
 
-    try:
-        do_send_email(subject, body)
-    except:
-        logging.exception('Failed to send email')
+    for retry_cd in [5, 10, 0]:
+        try:
+            do_send_email(subject, body)
+        except:
+            if retry_cd > 0:
+                logging.exception('Failed to send email, will retry in %s second(s)', retry_cd)
+                time.sleep(retry_cd)
+            else:
+                logging.exception('Failed to send email')
+                break
+        else:
+            break
 
 def play_sound(path, n, **kw):
     try:
